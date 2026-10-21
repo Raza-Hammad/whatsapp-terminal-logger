@@ -1,0 +1,2029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Web Recent Chats Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: #0b141a;
+      --bg-panel: #111b21;
+      --bg-panel-hover: #202c33;
+      --bg-card: #182229;
+      --bg-header: #111b21;
+      --border-color: rgba(134, 150, 160, 0.15);
+      --border-focus: #00a884;
+      
+      --bubble-out: #005c4b;
+      --bubble-out-hover: #026b57;
+      --bubble-in: #202c33;
+      --bubble-in-hover: #26353d;
+      
+      --accent-emerald: #00a884;
+      --accent-emerald-light: #25d366;
+      --accent-emerald-glow: rgba(0, 168, 132, 0.25);
+      --accent-blue: #53bdeb;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      
+      --text-primary: #e9edef;
+      --text-secondary: #8696a0;
+      --text-muted: #667781;
+      --text-highlight: #00a884;
+      
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+      
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      
+      --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: text;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(134, 150, 160, 0.25);
+      border-radius: var(--radius-full);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(134, 150, 160, 0.45);
+    }
+
+    /* Top Master Header */
+    .top-header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #25d366, #128c7e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 2px 8px var(--accent-emerald-glow);
+    }
+
+    .brand-title h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title .badge-tag {
+      background: rgba(0, 168, 132, 0.18);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(0, 168, 132, 0.3);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-title p {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 1px;
+    }
+
+    .header-center-stats {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-chip {
+      background: rgba(24, 34, 41, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-full);
+      padding: 5px 12px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--text-secondary);
+    }
+
+    .status-chip .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+    }
+
+    .status-chip strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      outline: none;
+      white-space: nowrap;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      border-color: var(--border-color);
+      color: var(--text-primary);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-panel-hover);
+      border-color: rgba(134, 150, 160, 0.3);
+    }
+
+    .btn-primary {
+      background: var(--accent-emerald);
+      color: #0b141a;
+      font-weight: 700;
+    }
+    .btn-primary:hover {
+      background: #02be94;
+      box-shadow: 0 2px 10px var(--accent-emerald-glow);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* 3-Step Interactive Control Deck */
+    .control-deck {
+      background: #111b21;
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 20px;
+      display: grid;
+      grid-template-columns: 1.3fr 1.2fr 1.5fr;
+      gap: 16px;
+      align-items: center;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    @media (max-width: 1080px) {
+      .control-deck {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+
+    .deck-step {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .step-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--accent-emerald);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .step-label .num {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(0, 168, 132, 0.2);
+      color: var(--accent-emerald);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .step-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Contact Autocomplete Selector */
+    .select-wrapper {
+      position: relative;
+      flex: 1;
+    }
+
+    .custom-select {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-family: inherit;
+      border-radius: var(--radius-sm);
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238696a0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 14px;
+      padding-right: 32px;
+    }
+
+    .custom-select:focus {
+      border-color: var(--accent-emerald);
+      box-shadow: 0 0 0 1px var(--accent-emerald);
+    }
+
+    /* Preset Range Buttons & Numeric Input */
+    .range-pills {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+    }
+
+    .preset-pill {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 9px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .preset-pill:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .preset-pill.active {
+      background: var(--accent-emerald);
+      color: #0b141a;
+      font-weight: 700;
+    }
+
+    .count-input-group {
+      display: flex;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 2px 8px;
+      width: 76px;
+    }
+
+    .count-input-group input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      outline: none;
+      text-align: center;
+    }
+
+    /* Segmented Filter Toggle */
+    .segmented-filter {
+      display: flex;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      width: 100%;
+    }
+
+    .filter-tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 7px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .filter-tab:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .filter-tab.active {
+      background: var(--bg-panel-hover);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .filter-tab .badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 10px;
+      background: rgba(134, 150, 160, 0.2);
+      color: var(--text-secondary);
+    }
+
+    .filter-tab.active .badge {
+      background: var(--accent-emerald);
+      color: #0b141a;
+    }
+
+    /* Main App Layout */
+    .app-workspace {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 120px);
+      overflow: hidden;
+    }
+
+    /* Left Sidebar: Synced 1-on-1 Contacts */
+    .contacts-sidebar {
+      width: 320px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-search-box {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-panel);
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input-wrapper svg {
+      position: absolute;
+      left: 10px;
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: var(--text-secondary);
+      stroke-width: 2;
+    }
+
+    .sidebar-search-input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      padding: 7px 12px 7px 32px;
+      color: var(--text-primary);
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-search-input:focus {
+      border-color: var(--accent-emerald);
+      background: var(--bg-panel);
+    }
+
+    .contacts-header-info {
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      background: rgba(17, 27, 33, 0.5);
+    }
+
+    .contacts-list {
+      flex: 1;
+      overflow-y: auto;
+      list-style: none;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      transition: background 0.15s ease;
+      position: relative;
+    }
+
+    .contact-item:hover {
+      background: var(--bg-panel-hover);
+    }
+
+    .contact-item.active {
+      background: #222d34;
+      border-left: 3px solid var(--accent-emerald);
+    }
+
+    .contact-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #2a3942;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-primary);
+      flex-shrink: 0;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .contact-avatar.avatar-saved {
+      background: linear-gradient(135deg, #1f4037, #11998e);
+    }
+    .contact-avatar.avatar-unsaved {
+      background: linear-gradient(135deg, #373b44, #4286f4);
+    }
+
+    .contact-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .contact-name-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+
+    .contact-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .contact-badge {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-saved {
+      background: rgba(0, 168, 132, 0.2);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(0, 168, 132, 0.3);
+    }
+
+    .badge-unsaved {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .contact-phone {
+      font-size: 11px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: var(--font-mono);
+    }
+
+    .empty-sidebar {
+      padding: 30px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* Right Main Chat Canvas */
+    .chat-canvas-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background-color: var(--bg-canvas);
+      /* Signature WhatsApp dark doodle wallpaper pattern */
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(17, 27, 33, 0.9) 0%, rgba(11, 20, 26, 0.97) 100%),
+        url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%238696a0' fill-opacity='0.035'%3E%3Cpath d='M14 16H9v-2h5V9.87a4 4 0 1 1 2 0V14h5v2h-5v5.13a4 4 0 1 1-2 0V16zm36 0h-5v-2h5V9.87a4 4 0 1 1 2 0V14h5v2h-5v5.13a4 4 0 1 1-2 0V16zm-18 20h-5v-2h5v-4.13a4 4 0 1 1 2 0V34h5v2h-5v5.13a4 4 0 1 1-2 0V36z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* Active Chat Header */
+    .chat-header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 5;
+    }
+
+    .chat-header-contact {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .active-chat-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #2a3942;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .active-chat-titles h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .active-chat-titles p {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      margin-top: 1px;
+    }
+
+    .chat-header-tools {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .in-chat-search {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .in-chat-search svg {
+      position: absolute;
+      left: 10px;
+      width: 13px;
+      height: 13px;
+      stroke: var(--text-muted);
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .in-chat-search input {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px 6px 30px;
+      font-size: 11px;
+      color: var(--text-primary);
+      font-family: inherit;
+      width: 170px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .in-chat-search input:focus {
+      width: 220px;
+      border-color: var(--accent-emerald);
+    }
+
+    .stats-chip-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .pill-stat {
+      background: rgba(32, 44, 51, 0.7);
+      border: 1px solid var(--border-color);
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      font-size: 10px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .pill-stat strong {
+      color: var(--text-primary);
+    }
+
+    /* Chat Messages Stream Area */
+    .chat-messages-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Date Divider Pill */
+    .date-divider {
+      display: flex;
+      justify-content: center;
+      margin: 14px 0 10px 0;
+      position: sticky;
+      top: 0;
+      z-index: 3;
+    }
+
+    .date-pill {
+      background: #182229;
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    /* Message Row & Bubble Container */
+    .message-row {
+      display: flex;
+      width: 100%;
+      margin-bottom: 2px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-row.row-out {
+      justify-content: flex-end;
+    }
+
+    .message-row.row-in {
+      justify-content: flex-start;
+    }
+
+    .message-bubble {
+      max-width: 65%;
+      min-width: 140px;
+      padding: 7px 11px 6px 11px;
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+      transition: background 0.15s ease;
+    }
+
+    /* Outgoing Bubble (Me) */
+    .message-bubble.bubble-out {
+      background: var(--bubble-out);
+      color: #e9edef;
+      border-top-right-radius: 2px;
+    }
+    .message-bubble.bubble-out:hover {
+      background: var(--bubble-out-hover);
+    }
+
+    /* Incoming Bubble (Them) */
+    .message-bubble.bubble-in {
+      background: var(--bubble-in);
+      color: #e9edef;
+      border-top-left-radius: 2px;
+    }
+    .message-bubble.bubble-in:hover {
+      background: var(--bubble-in-hover);
+    }
+
+    .bubble-sender {
+      font-size: 11px;
+      font-weight: 700;
+      color: #53bdeb;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bubble-out .bubble-sender {
+      color: #53bdeb;
+    }
+
+    .bubble-tag {
+      font-size: 9px;
+      background: rgba(0, 0, 0, 0.25);
+      color: #8696a0;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+
+    .bubble-text {
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+      user-select: text;
+    }
+
+    .bubble-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 5px;
+      margin-top: 4px;
+      font-size: 10px;
+      color: rgba(233, 237, 239, 0.6);
+      user-select: none;
+    }
+
+    .bubble-time {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: -0.2px;
+    }
+
+    .check-icon {
+      color: var(--accent-blue);
+      font-size: 11px;
+      letter-spacing: -2px;
+      font-weight: bold;
+    }
+
+    /* Copy Message Button on Hover */
+    .bubble-copy-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      opacity: 0;
+      background: rgba(17, 27, 33, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-secondary);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 9px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .message-bubble:hover .bubble-copy-btn {
+      opacity: 1;
+    }
+
+    .bubble-copy-btn:hover {
+      background: var(--bg-panel);
+      color: var(--text-primary);
+    }
+
+    /* Media Cards inside Message Bubbles */
+    .media-card {
+      margin-top: 4px;
+      margin-bottom: 4px;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    /* Image Card */
+    .media-image-container {
+      position: relative;
+      border-radius: 6px;
+      overflow: hidden;
+      max-width: 320px;
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    .media-image-preview {
+      display: block;
+      width: 100%;
+      max-height: 280px;
+      object-fit: cover;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .media-image-preview:hover {
+      transform: scale(1.02);
+    }
+
+    .media-video-preview {
+      display: block;
+      width: 100%;
+      max-height: 280px;
+      border-radius: 6px;
+      background: #000;
+    }
+
+    .media-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 80px;
+      padding: 14px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.25);
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .doc-thumb {
+      max-height: 160px;
+      margin-bottom: 6px;
+    }
+
+    .doc-thumb .media-image-preview {
+      max-height: 160px;
+    }
+
+    .doc-mime {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+
+    .media-download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 6px;
+      color: var(--accent-blue);
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .media-download-link:hover {
+      text-decoration: underline;
+    }
+
+    .voice-wave {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 20px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .voice-wave span {
+      width: 3px;
+      height: 8px;
+      border-radius: 2px;
+      background: var(--accent-emerald);
+      animation: voiceWave 1s ease-in-out infinite;
+    }
+
+    .voice-wave span:nth-child(2) { height: 14px; animation-delay: 0.12s; }
+    .voice-wave span:nth-child(3) { height: 10px; animation-delay: 0.24s; }
+    .voice-wave span:nth-child(4) { height: 16px; animation-delay: 0.36s; }
+    .voice-wave span:nth-child(5) { height: 7px; animation-delay: 0.48s; }
+
+    @keyframes voiceWave {
+      0%, 100% { transform: scaleY(0.7); opacity: 0.6; }
+      50% { transform: scaleY(1.35); opacity: 1; }
+    }
+
+    .media-audio-missing {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Document Card */
+    .media-doc-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      min-width: 240px;
+      max-width: 340px;
+    }
+
+    .doc-icon-box {
+      width: 38px;
+      height: 44px;
+      border-radius: 4px;
+      background: #dc2626; /* PDF Red */
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10.5px;
+      font-weight: 700;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+    }
+    .doc-icon-box.doc-docx { background: #2563eb; }
+    .doc-icon-box.doc-txt { background: #475569; }
+
+    .doc-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .doc-filename {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .doc-meta {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .doc-badge {
+      font-size: 8.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 1px 4px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Audio / Voice Note Card */
+    .media-audio-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 8px 12px;
+      min-width: 250px;
+      max-width: 320px;
+    }
+
+    .audio-header-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .audio-mic-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      color: #0b141a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .audio-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .audio-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .audio-meta {
+      font-size: 9.5px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    .media-audio-player {
+      width: 100%;
+      height: 32px;
+      outline: none;
+      border-radius: 4px;
+    }
+
+    .media-caption-text {
+      font-size: 12.5px;
+      line-height: 1.4;
+      margin-top: 6px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Zero State / Placeholder Screens */
+    .state-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+    .state-illustration {
+      width: 76px;
+      height: 76px;
+      border-radius: 20px;
+      background: rgba(32, 44, 51, 0.7);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .state-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .state-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      max-width: 420px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .state-tips {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: left;
+      max-width: 420px;
+      line-height: 1.6;
+    }
+
+    .state-tips strong {
+      color: var(--accent-emerald);
+    }
+
+    /* Spinner Animation */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(11, 20, 26, 0.3);
+      border-top-color: #0b141a;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .spinner-light {
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top-color: var(--accent-emerald);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Floating Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: #182229;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(20px);
+      opacity: 0;
+      animation: toastSlideUp 0.3s forwards cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast.toast-success {
+      border-left: 3px solid var(--accent-emerald);
+    }
+
+    .toast.toast-error {
+      border-left: 3px solid var(--accent-red);
+    }
+
+    @keyframes toastSlideUp {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Master Header Bar -->
+  <header class="top-header">
+    <div class="brand-section">
+      <div class="brand-logo">💬</div>
+      <div class="brand-title">
+        <h1>Recent Chats Explorer <span class="badge-tag">WhatsApp Web Bridge</span></h1>
+        <p>1-on-1 Message History & Gemini AI Auto-Reply Manager</p>
+      </div>
+    </div>
+
+    <div class="header-center-stats">
+      <div class="status-chip" id="serverChip">
+        <span class="dot"></span>
+        <span>Server: <strong id="serverStatusText">Online (Port 3000)</strong></span>
+      </div>
+      <div class="status-chip" id="geminiChip">
+        <span>🤖 Gemini Keys: <strong id="geminiKeysCount">-</strong></span>
+      </div>
+      <div class="status-chip" id="contactsChip">
+        <span>👥 1-on-1 Contacts: <strong id="contactsCount">-</strong></span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-secondary" id="refreshContactsBtn" title="Re-sync contacts from WhatsApp Web">
+        <svg id="refreshIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        <span>Refresh Contacts</span>
+      </button>
+      <button class="btn btn-secondary" id="exportChatBtn" disabled title="Copy current conversation to clipboard">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy Filtered Chat</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 3-Step Interactive Control Bar -->
+  <nav class="control-deck">
+    <!-- Step 1: Select Person (1-on-1 DMs Only) -->
+    <div class="deck-step">
+      <div class="step-label">
+        <span class="num">1</span>
+        <span>Select 1-on-1 Contact</span>
+      </div>
+      <div class="step-input-row">
+        <div class="select-wrapper">
+          <select id="contactSelect" class="custom-select">
+            <option value="">-- Choose 1-on-1 Contact --</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Select or Type Range / Count -->
+    <div class="deck-step">
+      <div class="step-label">
+        <span class="num">2</span>
+        <span>Recent Message Range</span>
+      </div>
+      <div class="step-input-row">
+        <div class="range-pills">
+          <button class="preset-pill" data-count="10">10</button>
+          <button class="preset-pill" data-count="25">25</button>
+          <button class="preset-pill active" data-count="50">50</button>
+          <button class="preset-pill" data-count="100">100</button>
+        </div>
+        <div class="count-input-group" title="Type any exact count between 1 and 500">
+          <input type="number" id="customCountInput" min="1" max="500" value="50">
+        </div>
+        <button class="btn btn-primary" id="fetchChatsBtn">
+          <span id="fetchBtnSpinner" class="spinner" style="display: none;"></span>
+          <span id="fetchBtnText">Fetch Recent Chats</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: Message Perspective Filter -->
+    <div class="deck-step">
+      <div class="step-label">
+        <span class="num">3</span>
+        <span>Message Perspective Filter</span>
+      </div>
+      <div class="step-input-row">
+        <div class="segmented-filter">
+          <button class="filter-tab active" data-filter="all" id="filterAllBtn">
+            <span>🔄 Complete Chat</span>
+            <span class="badge" id="badgeAll">0</span>
+          </button>
+          <button class="filter-tab" data-filter="them" id="filterThemBtn">
+            <span>📥 Only Theirs</span>
+            <span class="badge" id="badgeThem">0</span>
+          </button>
+          <button class="filter-tab" data-filter="me" id="filterMeBtn">
+            <span>📤 Only Mine</span>
+            <span class="badge" id="badgeMe">0</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main App Workspace (Sidebar + Chat Area) -->
+  <main class="app-workspace">
+    <!-- Left Sidebar: Synced 1-on-1 Contacts -->
+    <aside class="contacts-sidebar">
+      <div class="sidebar-search-box">
+        <div class="search-input-wrapper">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="sidebarSearchInput" class="sidebar-search-input" placeholder="Search contacts...">
+        </div>
+      </div>
+
+      <div class="contacts-header-info">
+        <span id="sidebarCountLabel">0 Contacts Synced</span>
+        <span>1-on-1 DMs only</span>
+      </div>
+
+      <ul class="contacts-list" id="contactsListContainer">
+        <!-- Contact items populated dynamically -->
+      </ul>
+    </aside>
+
+    <!-- Right Chat Canvas Area -->
+    <section class="chat-canvas-wrapper">
+      <!-- Active Chat Header -->
+      <div class="chat-header" id="activeChatHeader" style="display: none;">
+        <div class="chat-header-contact">
+          <div class="active-chat-avatar" id="activeAvatar">U</div>
+          <div class="active-chat-titles">
+            <h2>
+              <span id="activeName">Select Contact</span>
+              <span id="activeBadge" class="contact-badge badge-saved">Saved</span>
+            </h2>
+            <p id="activeNumber">+92...</p>
+          </div>
+        </div>
+
+        <div class="chat-header-tools">
+          <div class="in-chat-search">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="inChatSearchInput" placeholder="Filter message text...">
+          </div>
+          <div class="stats-chip-group">
+            <span class="pill-stat">Total: <strong id="statTotal">0</strong></span>
+            <span class="pill-stat">Them: <strong id="statThem">0</strong></span>
+            <span class="pill-stat">Me: <strong id="statMe">0</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages Stream -->
+      <div class="chat-messages-scroll" id="messagesContainer">
+        <!-- Initial Welcome State -->
+        <div class="state-screen" id="welcomeState">
+          <div class="state-illustration">💬</div>
+          <h2 class="state-title">WhatsApp Recent Chats Explorer</h2>
+          <p class="state-desc">Select any 1-on-1 contact from the left sidebar or top dropdown, choose how many recent messages to fetch (e.g. 25, 50, or custom), and click <strong>Fetch Recent Chats</strong>.</p>
+          <div class="state-tips">
+            💡 <strong>Pro-Tip:</strong> WhatsApp Web must be open in a Chrome tab with the extension active so it can bridge historical chats on-demand directly from WhatsApp's internal store.
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="state-screen" id="loadingState" style="display: none;">
+          <div class="state-illustration">
+            <div class="spinner spinner-light" style="width: 28px; height: 28px; border-width: 3px;"></div>
+          </div>
+          <h2 class="state-title">Loading Messages from WhatsApp Web...</h2>
+          <p class="state-desc">Requesting on-demand historical chat buffer via Extension Bridge. If fetching older days, WhatsApp Web is loading message batches into memory...</p>
+        </div>
+
+        <!-- Empty Results State -->
+        <div class="state-screen" id="emptyState" style="display: none;">
+          <div class="state-illustration">🔍</div>
+          <h2 class="state-title">No Messages Found</h2>
+          <p class="state-desc" id="emptyStateMsg">No messages match the current perspective filter or search term.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // Application State
+      const state = {
+        contacts: [],
+        selectedChatId: '',
+        selectedContact: null,
+        loadedMessages: [],
+        currentFilter: 'all', // 'all' | 'them' | 'me'
+        searchQuery: '',
+        isFetching: false
+      };
+
+      // DOM Elements
+      const serverStatusText = document.getElementById('serverStatusText');
+      const geminiKeysCount = document.getElementById('geminiKeysCount');
+      const contactsCount = document.getElementById('contactsCount');
+      const refreshContactsBtn = document.getElementById('refreshContactsBtn');
+      const refreshIcon = document.getElementById('refreshIcon');
+      const exportChatBtn = document.getElementById('exportChatBtn');
+
+      const contactSelect = document.getElementById('contactSelect');
+      const presetPills = document.querySelectorAll('.preset-pill');
+      const customCountInput = document.getElementById('customCountInput');
+      const fetchChatsBtn = document.getElementById('fetchChatsBtn');
+      const fetchBtnSpinner = document.getElementById('fetchBtnSpinner');
+      const fetchBtnText = document.getElementById('fetchBtnText');
+
+      const filterTabs = document.querySelectorAll('.filter-tab');
+      const badgeAll = document.getElementById('badgeAll');
+      const badgeThem = document.getElementById('badgeThem');
+      const badgeMe = document.getElementById('badgeMe');
+
+      const sidebarSearchInput = document.getElementById('sidebarSearchInput');
+      const sidebarCountLabel = document.getElementById('sidebarCountLabel');
+      const contactsListContainer = document.getElementById('contactsListContainer');
+
+      const activeChatHeader = document.getElementById('activeChatHeader');
+      const activeAvatar = document.getElementById('activeAvatar');
+      const activeName = document.getElementById('activeName');
+      const activeNumber = document.getElementById('activeNumber');
+      const activeBadge = document.getElementById('activeBadge');
+      const inChatSearchInput = document.getElementById('inChatSearchInput');
+
+      const statTotal = document.getElementById('statTotal');
+      const statThem = document.getElementById('statThem');
+      const statMe = document.getElementById('statMe');
+
+      const messagesContainer = document.getElementById('messagesContainer');
+      const welcomeState = document.getElementById('welcomeState');
+      const loadingState = document.getElementById('loadingState');
+      const emptyState = document.getElementById('emptyState');
+      const emptyStateMsg = document.getElementById('emptyStateMsg');
+      const toastContainer = document.getElementById('toastContainer');
+
+      // 1. Toast Notification Helper
+      function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(10px)';
+          toast.style.transition = 'all 0.25s ease';
+          setTimeout(() => toast.remove(), 250);
+        }, 3000);
+      }
+
+      // 2. Fetch Server Health & Contacts
+      async function checkHealth() {
+        try {
+          const res = await fetch('/health');
+          if (res.ok) {
+            const data = await res.json();
+            serverStatusText.textContent = `Online (${data.geminiModel || 'Port 3000'})`;
+            geminiKeysCount.textContent = data.keysConfigured || '0';
+          }
+        } catch (e) {
+          serverStatusText.textContent = 'Offline (Check Terminal)';
+        }
+      }
+
+      async function fetchContacts(silent = false) {
+        if (!silent) {
+          refreshIcon.style.animation = 'spin 0.7s linear infinite';
+        }
+        try {
+          const res = await fetch('/api/contacts');
+          if (res.ok) {
+            const data = await res.json();
+            state.contacts = Array.isArray(data.contacts) ? data.contacts : [];
+            contactsCount.textContent = state.contacts.length;
+            sidebarCountLabel.textContent = `${state.contacts.length} Contacts Synced`;
+            renderContactSelect();
+            renderSidebarContacts();
+            if (!silent) showToast(`Synced ${state.contacts.length} 1-on-1 contacts from WhatsApp!`);
+          }
+        } catch (err) {
+          if (!silent) showToast('Failed to fetch contacts from server.', 'error');
+        } finally {
+          if (!silent) {
+            setTimeout(() => { refreshIcon.style.animation = 'none'; }, 500);
+          }
+        }
+      }
+
+      // 3. Render Top Contact Dropdown
+      function renderContactSelect() {
+        const prevValue = contactSelect.value;
+        contactSelect.innerHTML = '<option value="">-- Choose 1-on-1 Contact --</option>';
+
+        state.contacts.forEach((contact) => {
+          const opt = document.createElement('option');
+          opt.value = contact.chatId;
+          const status = contact.isSaved ? '[Saved]' : '[Unsaved]';
+          opt.textContent = `${contact.name} (${contact.number || 'No Phone'}) ${status}`;
+          contactSelect.appendChild(opt);
+        });
+
+        if (prevValue && state.contacts.some(c => c.chatId === prevValue)) {
+          contactSelect.value = prevValue;
+        } else if (state.selectedChatId) {
+          contactSelect.value = state.selectedChatId;
+        }
+      }
+
+      // 4. Render Left Sidebar Contacts
+      function renderSidebarContacts() {
+        const query = (sidebarSearchInput.value || '').trim().toLowerCase();
+        contactsListContainer.innerHTML = '';
+
+        const filtered = state.contacts.filter(c => {
+          if (!query) return true;
+          const nameMatch = (c.name || '').toLowerCase().includes(query);
+          const phoneMatch = (c.number || '').toLowerCase().includes(query);
+          return nameMatch || phoneMatch;
+        });
+
+        if (filtered.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'empty-sidebar';
+          empty.innerHTML = state.contacts.length === 0
+            ? '<strong>No Contacts Synced Yet</strong><br>Open WhatsApp Web in a Chrome tab to auto-sync your 1-on-1 chats.'
+            : 'No contacts match your search.';
+          contactsListContainer.appendChild(empty);
+          return;
+        }
+
+        filtered.forEach(c => {
+          const li = document.createElement('li');
+          li.className = `contact-item ${c.chatId === state.selectedChatId ? 'active' : ''}`;
+          li.dataset.chatId = c.chatId;
+
+          const initial = (c.name || 'U').charAt(0).toUpperCase();
+          const avatarClass = c.isSaved ? 'avatar-saved' : 'avatar-unsaved';
+          const badgeClass = c.isSaved ? 'badge-saved' : 'badge-unsaved';
+          const badgeText = c.isSaved ? 'Saved' : 'Unsaved';
+
+          li.innerHTML = `
+            <div class="contact-avatar ${avatarClass}">${initial}</div>
+            <div class="contact-info">
+              <div class="contact-name-row">
+                <span class="contact-name" title="${c.name}">${escapeHtml(c.name)}</span>
+                <span class="contact-badge ${badgeClass}">${badgeText}</span>
+              </div>
+              <div class="contact-phone">${escapeHtml(c.number || c.chatId)}</div>
+            </div>
+          `;
+
+          li.addEventListener('click', () => {
+            selectContact(c.chatId);
+          });
+
+          contactsListContainer.appendChild(li);
+        });
+      }
+
+      function selectContact(chatId) {
+        state.selectedChatId = chatId;
+        state.selectedContact = state.contacts.find(c => c.chatId === chatId) || null;
+
+        contactSelect.value = chatId;
+        renderSidebarContacts();
+
+        if (state.selectedContact) {
+          activeChatHeader.style.display = 'flex';
+          activeAvatar.textContent = (state.selectedContact.name || 'U').charAt(0).toUpperCase();
+          activeName.textContent = state.selectedContact.name || 'Unknown';
+          activeNumber.textContent = state.selectedContact.number || state.selectedContact.chatId;
+
+          activeBadge.className = `contact-badge ${state.selectedContact.isSaved ? 'badge-saved' : 'badge-unsaved'}`;
+          activeBadge.textContent = state.selectedContact.isSaved ? 'Saved' : 'Unsaved';
+        }
+      }
+
+      // 5. Preset Range Pills & Custom Count
+      presetPills.forEach((pill) => {
+        pill.addEventListener('click', () => {
+          presetPills.forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          customCountInput.value = pill.dataset.count;
+        });
+      });
+
+      customCountInput.addEventListener('input', () => {
+        const val = customCountInput.value;
+        presetPills.forEach(p => {
+          if (p.dataset.count === val) {
+            p.classList.add('active');
+          } else {
+            p.classList.remove('active');
+          }
+        });
+      });
+
+      // 6. Fetch Recent Chats from Extension Bridge
+      async function fetchRecentChats() {
+        if (!state.selectedChatId) {
+          showToast('Please select a 1-on-1 contact first!', 'error');
+          return;
+        }
+
+        const limit = parseInt(customCountInput.value, 10) || 50;
+        state.isFetching = true;
+        fetchChatsBtn.disabled = true;
+        fetchBtnSpinner.style.display = 'inline-block';
+        fetchBtnText.textContent = 'Fetching...';
+
+        welcomeState.style.display = 'none';
+        emptyState.style.display = 'none';
+        loadingState.style.display = 'flex';
+
+        // Clear existing bubble elements while loading
+        clearMessageBubbles();
+
+        try {
+          const url = `/api/chat-history?chatId=${encodeURIComponent(state.selectedChatId)}&limit=${limit}`;
+          const res = await fetch(url);
+
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `HTTP ${res.status}`);
+          }
+
+          const data = await res.json();
+          state.loadedMessages = Array.isArray(data.messages) ? data.messages : [];
+
+          loadingState.style.display = 'none';
+          exportChatBtn.disabled = state.loadedMessages.length === 0;
+
+          showToast(`Retrieved ${state.loadedMessages.length} messages for ${state.selectedContact?.name || 'Contact'}!`);
+          renderMessages();
+        } catch (err) {
+          loadingState.style.display = 'none';
+          emptyState.style.display = 'flex';
+          emptyStateMsg.innerHTML = `⚠️ <strong>Error fetching messages:</strong> ${escapeHtml(err.message)}<br><small>Ensure WhatsApp Web is open and active.</small>`;
+          showToast(`Failed: ${err.message}`, 'error');
+        } finally {
+          state.isFetching = false;
+          fetchChatsBtn.disabled = false;
+          fetchBtnSpinner.style.display = 'none';
+          fetchBtnText.textContent = 'Fetch Recent Chats';
+        }
+      }
+
+      function clearMessageBubbles() {
+        const existingRows = messagesContainer.querySelectorAll('.message-row, .date-divider');
+        existingRows.forEach(r => r.remove());
+      }
+
+      // 7. Render Messages with Perspective Filtering & Floating Dates
+      function renderMessages() {
+        clearMessageBubbles();
+
+        const query = (inChatSearchInput.value || '').trim().toLowerCase();
+
+        // 1. Calculate overall counts for segmented badges
+        const totalCount = state.loadedMessages.length;
+        const themCount = state.loadedMessages.filter(m => !m.fromMe).length;
+        const meCount = state.loadedMessages.filter(m => m.fromMe).length;
+
+        badgeAll.textContent = totalCount;
+        badgeThem.textContent = themCount;
+        badgeMe.textContent = meCount;
+
+        statTotal.textContent = totalCount;
+        statThem.textContent = themCount;
+        statMe.textContent = meCount;
+
+        // 2. Filter messages according to selected perspective & text query
+        let filtered = state.loadedMessages;
+        if (state.currentFilter === 'them') {
+          filtered = filtered.filter(m => !m.fromMe);
+        } else if (state.currentFilter === 'me') {
+          filtered = filtered.filter(m => m.fromMe);
+        }
+
+        if (query) {
+          filtered = filtered.filter(m => (m.text || '').toLowerCase().includes(query));
+        }
+
+        if (filtered.length === 0) {
+          emptyState.style.display = 'flex';
+          emptyStateMsg.textContent = state.loadedMessages.length === 0
+            ? 'No messages returned from this chat.'
+            : 'No messages match the current filter or search criteria.';
+          return;
+        } else {
+          emptyState.style.display = 'none';
+        }
+
+        // 3. Group messages chronologically with Date Dividers
+        let lastDateStr = '';
+
+        filtered.forEach(m => {
+          const dateStr = m.dateStr || (m.timestampUnix ? new Date(m.timestampUnix * 1000).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent');
+
+          if (dateStr !== lastDateStr) {
+            lastDateStr = dateStr;
+            const divider = document.createElement('div');
+            divider.className = 'date-divider';
+            divider.innerHTML = `<span class="date-pill">${escapeHtml(dateStr)}</span>`;
+            messagesContainer.appendChild(divider);
+          }
+
+          const isOut = Boolean(m.fromMe);
+          const row = document.createElement('div');
+          row.className = `message-row ${isOut ? 'row-out' : 'row-in'}`;
+
+          const senderLabel = isOut ? 'You (Me)' : (m.senderLabel || state.selectedContact?.name || 'Them');
+          const typeBadge = (m.type && m.type !== 'chat') ? `<span class="bubble-tag">${escapeHtml(m.type.toUpperCase())}</span>` : '';
+          const exactTime = m.timeStr || (m.timestampUnix ? new Date(m.timestampUnix * 1000).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '');
+          const checkMarks = isOut ? '<span class="check-icon" title="Delivered">✓✓</span>' : '';
+
+          const isMedia = Boolean(m.isMedia || (m.type && m.type !== 'chat'));
+          let bodyContentHtml = '';
+
+          if (isMedia) {
+            const mediaType = (m.mediaType || m.type || '').toLowerCase();
+            const caption = m.caption ? `<div class="media-caption-text">${escapeHtml(m.caption)}</div>` : '';
+            const fullMediaSrc = m.mediaUrl || '';
+            const previewSrc = m.previewUrl || '';
+            const imageSrc = (mediaType === 'image' || mediaType === 'sticker' || mediaType === 'video')
+              ? (fullMediaSrc || previewSrc)
+              : previewSrc;
+            const fileName = m.fileName || '';
+            const mimeType = (m.mimeType || '').split(';')[0].trim();
+            const sizeStr = formatFileSize(m.fileSize);
+            const mimeBadge = getMimeBadge(mimeType, fileName, mediaType);
+
+            if (mediaType === 'image' || mediaType === 'sticker') {
+              bodyContentHtml = `
+                <div class="media-card">
+                  ${imageSrc
+                    ? `<div class="media-image-container"><img class="media-image-preview" src="${escapeHtml(imageSrc)}" alt="WhatsApp ${escapeHtml(mediaType)}" /></div>`
+                    : `<div class="media-placeholder">🖼️ ${mediaType === 'sticker' ? 'Sticker' : 'Image'} preview unavailable</div>`}
+                  ${caption}
+                </div>
+              `;
+            } else if (mediaType === 'video') {
+              bodyContentHtml = `
+                <div class="media-card">
+                  ${fullMediaSrc
+                    ? `<video class="media-video-preview" controls preload="metadata" src="${escapeHtml(fullMediaSrc)}"></video>`
+                    : (imageSrc
+                      ? `<div class="media-image-container"><img class="media-image-preview" src="${escapeHtml(imageSrc)}" alt="Video thumbnail" /></div>`
+                      : `<div class="media-placeholder">🎬 Video preview unavailable</div>`)}
+                  ${caption}
+                </div>
+              `;
+            } else if (mediaType === 'document') {
+              const displayName = fileName || 'Document';
+              const ext = (displayName.split('.').pop() || '').toLowerCase();
+              let docClass = '';
+              if (ext === 'docx' || ext === 'doc') docClass = 'doc-docx';
+              else if (ext === 'txt' || ext === 'csv' || ext === 'json') docClass = 'doc-txt';
+
+              bodyContentHtml = `
+                <div class="media-card">
+                  ${previewSrc
+                    ? `<div class="media-image-container doc-thumb"><img class="media-image-preview" src="${escapeHtml(previewSrc)}" alt="Document preview" /></div>`
+                    : ''}
+                  <div class="media-doc-card">
+                    <div class="doc-icon-box ${docClass}">${escapeHtml(mimeBadge)}</div>
+                    <div class="doc-details">
+                      <div class="doc-filename" title="${escapeHtml(displayName)}">${escapeHtml(displayName)}</div>
+                      <div class="doc-meta">
+                        <span class="doc-badge">${escapeHtml(mimeBadge)}</span>
+                        ${sizeStr ? `<span>${escapeHtml(sizeStr)}</span>` : ''}
+                        ${mimeType ? `<span class="doc-mime" title="${escapeHtml(mimeType)}">${escapeHtml(mimeType)}</span>` : ''}
+                      </div>
+                    </div>
+                  </div>
+                  ${fullMediaSrc
+                    ? `<a class="media-download-link" href="${escapeHtml(fullMediaSrc)}" download="${escapeHtml(displayName)}">⬇ Download ${escapeHtml(displayName)}</a>`
+                    : ''}
+                  ${caption}
+                </div>
+              `;
+            } else if (mediaType === 'ptt' || mediaType === 'audio') {
+              const isPtt = mediaType === 'ptt';
+              const title = isPtt ? 'Voice Message' : (fileName || 'Audio Message');
+              const meta = [m.duration ? `${m.duration}s` : '', sizeStr].filter(Boolean).join(' • ') || 'Audio';
+
+              bodyContentHtml = `
+                <div class="media-card">
+                  <div class="media-audio-card">
+                    <div class="audio-header-row">
+                      <div class="audio-mic-icon">${isPtt ? '🎤' : '🎵'}</div>
+                      <div class="audio-info">
+                        <div class="audio-title">${escapeHtml(title)}</div>
+                        <div class="audio-meta">${escapeHtml(meta)}</div>
+                      </div>
+                      ${isPtt ? '<div class="voice-wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>' : ''}
+                    </div>
+                    ${fullMediaSrc
+                      ? `<audio class="media-audio-player" controls preload="metadata" src="${escapeHtml(fullMediaSrc)}"></audio>`
+                      : `<div class="media-audio-missing">${isPtt ? 'Voice note' : 'Audio'} player unavailable (media not in memory)</div>`}
+                  </div>
+                  ${caption}
+                </div>
+              `;
+            } else {
+              bodyContentHtml = `
+                <div class="media-card">
+                  ${imageSrc ? `<div class="media-image-container"><img class="media-image-preview" src="${escapeHtml(imageSrc)}" alt="Media preview" /></div>` : ''}
+                  <div class="media-caption-text">${escapeHtml(m.text || `${mediaType.toUpperCase()} attachment`)}</div>
+                </div>
+              `;
+            }
+          } else {
+            bodyContentHtml = `<div class="bubble-text">${escapeHtml(m.text || '')}</div>`;
+          }
+
+          row.innerHTML = `
+            <div class="message-bubble ${isOut ? 'bubble-out' : 'bubble-in'}">
+              <button class="bubble-copy-btn" title="Copy text">Copy</button>
+              <div class="bubble-sender">
+                <span>${escapeHtml(senderLabel)}</span>
+                ${typeBadge}
+              </div>
+              ${bodyContentHtml}
+              <div class="bubble-footer">
+                <span class="bubble-time">${escapeHtml(dateStr)} • ${escapeHtml(exactTime)}</span>
+                ${checkMarks}
+              </div>
+            </div>
+          `;
+
+          // Open image previews on click
+          row.querySelectorAll('.media-image-preview').forEach((img) => {
+            img.addEventListener('click', () => window.open(img.src, '_blank', 'noopener'));
+          });
+
+          // Copy single message button
+          const copyBtn = row.querySelector('.bubble-copy-btn');
+          copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(m.text || '');
+            showToast('Message copied to clipboard!');
+          });
+
+          messagesContainer.appendChild(row);
+        });
+
+        // Scroll to bottom of message container
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      // 8. Segmented Perspective Filter Change
+      filterTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          filterTabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          state.currentFilter = tab.dataset.filter;
+          renderMessages();
+        });
+      });
+
+      // 9. Search event listeners
+      inChatSearchInput.addEventListener('input', () => {
+        renderMessages();
+      });
+
+      sidebarSearchInput.addEventListener('input', () => {
+        renderSidebarContacts();
+      });
+
+      contactSelect.addEventListener('change', () => {
+        if (contactSelect.value) {
+          selectContact(contactSelect.value);
+        }
+      });
+
+      fetchChatsBtn.addEventListener('click', fetchRecentChats);
+
+      refreshContactsBtn.addEventListener('click', () => fetchContacts(false));
+
+      // 10. Copy / Export Filtered Chat
+      exportChatBtn.addEventListener('click', () => {
+        let filtered = state.loadedMessages;
+        if (state.currentFilter === 'them') filtered = filtered.filter(m => !m.fromMe);
+        if (state.currentFilter === 'me') filtered = filtered.filter(m => m.fromMe);
+
+        const query = (inChatSearchInput.value || '').trim().toLowerCase();
+        if (query) filtered = filtered.filter(m => (m.text || '').toLowerCase().includes(query));
+
+        if (filtered.length === 0) {
+          showToast('No messages to export.', 'error');
+          return;
+        }
+
+        const contactName = state.selectedContact?.name || 'Contact';
+        const contactNumber = state.selectedContact?.number || '';
+        let exportText = `WhatsApp Chat with ${contactName} (${contactNumber})\n`;
+        exportText += `Exported on: ${new Date().toLocaleString()}\n`;
+        exportText += `Filter: ${state.currentFilter.toUpperCase()} | Messages: ${filtered.length}\n`;
+        exportText += '==================================================\n\n';
+
+        filtered.forEach(m => {
+          const speaker = m.fromMe ? 'Me' : contactName;
+          const time = `${m.dateStr || ''} ${m.timeStr || ''}`.trim();
+          exportText += `[${time}] ${speaker}: ${m.text || ''}\n`;
+        });
+
+        navigator.clipboard.writeText(exportText).then(() => {
+          showToast(`Copied ${filtered.length} messages to clipboard!`);
+        }).catch(() => {
+          showToast('Failed to copy chat text.', 'error');
+        });
+      });
+
+      // Keyboard shortcuts: Enter on count input triggers fetch
+      customCountInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') fetchRecentChats();
+      });
+
+      // Format bytes into a compact KB/MB label
+      function formatFileSize(bytes) {
+        const value = Number(bytes);
+        if (!value || Number.isNaN(value)) return '';
+        if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+        if (value >= 1024) return `${Math.round(value / 1024)} KB`;
+        return `${value} B`;
+      }
+
+      // Derive a short WhatsApp-style document badge from MIME/extension
+      function getMimeBadge(mimeType, fileName, mediaType) {
+        const mime = (mimeType || '').toLowerCase();
+        const ext = (fileName || '').split('.').pop().toLowerCase();
+
+        if (mime.includes('pdf') || ext === 'pdf') return 'PDF';
+        if (mime.includes('word') || ext === 'docx' || ext === 'doc') return 'DOC';
+        if (mime.includes('sheet') || ext === 'xlsx' || ext === 'xls') return 'XLS';
+        if (mime.includes('presentation') || ext === 'pptx' || ext === 'ppt') return 'PPT';
+        if (mime.includes('zip') || mime.includes('rar') || ext === 'zip' || ext === 'rar') return 'ZIP';
+        if (mime.startsWith('text/') || ext === 'txt' || ext === 'csv' || ext === 'json') return 'TXT';
+        if (mediaType === 'image' || mediaType === 'sticker') return 'IMG';
+        if (mediaType === 'ptt' || mediaType === 'audio') return 'AUD';
+        if (mediaType === 'video') return 'VID';
+        return (ext || 'FILE').toUpperCase().slice(0, 4);
+      }
+
+      // Helper function to escape HTML special characters
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      // Initial initialization
+      checkHealth();
+      fetchContacts(true);
+
+      // Periodically poll health & contacts every 5 seconds
+      setInterval(() => {
+        checkHealth();
+        fetchContacts(true);
+      }, 5000);
+    })();
+  </script>
+</body>
+</html>

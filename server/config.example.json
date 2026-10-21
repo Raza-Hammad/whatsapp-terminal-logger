@@ -1,0 +1,7 @@
+{
+  "geminiModel": "gemini-2.5-flash",
+  "debounceSeconds": 7,
+  "geminiApiKeys": [
+    "PASTE_YOUR_GEMINI_API_KEY_HERE"
+  ]
+}
